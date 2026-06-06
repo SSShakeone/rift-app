@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #FFF8F0;
+  --bg-secondary: #FFF0E5;
+  --bg-card: #FFFFFF;
+  --color-external: #E8927C;
+  --color-external-light: rgba(232, 146, 124, 0.12);
+  --color-internal: #7CB8D4;
+  --color-internal-light: rgba(124, 184, 212, 0.12);
+  --color-accent: #F0A58E;
+  --color-text: #4A3728;
+  --color-text-muted: #9B8E84;
+  --color-border: #F0E0D0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+/* Intensity slider */
+.intensity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(240, 165, 142, 0.3);
+}
