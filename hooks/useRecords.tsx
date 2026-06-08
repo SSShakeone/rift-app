@@ -53,6 +53,13 @@ export function RecordsProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
+      // Clean up old mock data (IDs starting with "mock-")
+      const realRecords = localRecords.filter(r => !r.id.startsWith('mock-'));
+      if (realRecords.length !== localRecords.length) {
+        localRecords = realRecords;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(localRecords));
+      }
+
       try {
         const remoteRecords = await fetchRemoteRecords();
 
