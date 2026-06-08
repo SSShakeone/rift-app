@@ -17,7 +17,7 @@ export default function CandyPage() {
       const recent = getRecentRecords(1);
       generateTodayCandy(recent);
     }
-  }, [recordsState.isLoading]);
+  }, [recordsState.isLoading, state.todayCandy, generateTodayCandy, getRecentRecords]);
 
   if (recordsState.isLoading) {
     return (

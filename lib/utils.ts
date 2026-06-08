@@ -90,6 +90,18 @@ export const TAG_LABELS: Record<string, string> = {
   it4: '完美主义',
 };
 
+const DEVICE_ID_KEY = 'rift-device-id';
+
+export function getDeviceId(): string {
+  if (typeof window === 'undefined') return '';
+  let id = localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
 export function getTagLabel(tagId: string): string {
   return TAG_LABELS[tagId] || tagId;
 }

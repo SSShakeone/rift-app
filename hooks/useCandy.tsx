@@ -5,6 +5,11 @@ import { Candy, CandyState, CandyAction, CandyType } from '@/types';
 import { getCandyForDirection } from '@/lib/candy-pool';
 import { getToday, generateId } from '@/lib/utils';
 import { EmotionRecord } from '@/types';
+import {
+  syncCandyToRemote,
+  deleteCandyFromRemote,
+  fetchRemoteCandies,
+} from '@/lib/sync-service';
 
 const STORAGE_KEY = 'rift-candies';
 
@@ -57,13 +62,32 @@ export function CandyProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
+    async function loadCandies() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let localToday: Candy | null = null;
+      let localCollected: Candy[] = [];
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          localToday = parsed.today;
+          localCollected = parsed.collected;
+        } catch { /* ignore */ }
+      }
+
       try {
-        const parsed = JSON.parse(stored);
-        dispatch({ type: 'LOAD_CANDIES', payload: parsed });
-      } catch { /* ignore */ }
+        const remote = await fetchRemoteCandies();
+        const today = remote.today ?? localToday;
+        const collectedMap = new Map<string, Candy>();
+        for (const c of localCollected) collectedMap.set(c.id, c);
+        for (const c of remote.collected) collectedMap.set(c.id, c);
+        const collected = Array.from(collectedMap.values());
+
+        dispatch({ type: 'LOAD_CANDIES', payload: { today, collected } });
+      } catch {
+        dispatch({ type: 'LOAD_CANDIES', payload: { today: localToday, collected: localCollected } });
+      }
     }
+    loadCandies();
   }, []);
 
   useEffect(() => {
@@ -97,6 +121,7 @@ export function CandyProvider({ children }: { children: React.ReactNode }) {
     };
 
     dispatch({ type: 'SET_TODAY_CANDY', payload: candy });
+    syncCandyToRemote(candy);
   }, []);
 
   const openCandy = useCallback(() => {
@@ -104,11 +129,14 @@ export function CandyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const collectCandy = useCallback((candy: Candy) => {
-    dispatch({ type: 'COLLECT_CANDY', payload: { ...candy, isCollected: true } });
+    const collected = { ...candy, isCollected: true };
+    dispatch({ type: 'COLLECT_CANDY', payload: collected });
+    syncCandyToRemote(collected);
   }, []);
 
   const uncollectCandy = useCallback((id: string) => {
     dispatch({ type: 'UNCOLLECT_CANDY', payload: id });
+    deleteCandyFromRemote(id);
   }, []);
 
   return (

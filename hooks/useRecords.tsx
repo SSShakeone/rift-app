@@ -3,6 +3,11 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { EmotionRecord, RecordState, RecordAction } from '@/types';
 import { getToday } from '@/lib/utils';
+import {
+  syncRecordToRemote,
+  deleteRecordFromRemote,
+  fetchRemoteRecords,
+} from '@/lib/sync-service';
 
 const STORAGE_KEY = 'rift-records';
 
@@ -37,17 +42,37 @@ export function RecordsProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        dispatch({ type: 'LOAD_RECORDS', payload: parsed });
-      } catch {
-        dispatch({ type: 'LOAD_RECORDS', payload: [] });
+    async function loadRecords() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      let localRecords: EmotionRecord[] = [];
+      if (stored) {
+        try {
+          localRecords = JSON.parse(stored);
+        } catch {
+          localRecords = [];
+        }
       }
-    } else {
-      dispatch({ type: 'LOAD_RECORDS', payload: [] });
+
+      try {
+        const remoteRecords = await fetchRemoteRecords();
+
+        const recordMap = new Map<string, EmotionRecord>();
+        for (const r of localRecords) recordMap.set(r.id, r);
+        for (const r of remoteRecords) {
+          const existing = recordMap.get(r.id);
+          if (!existing || r.createdAt > existing.createdAt) {
+            recordMap.set(r.id, r);
+          }
+        }
+        const merged = Array.from(recordMap.values()).sort(
+          (a, b) => b.createdAt.localeCompare(a.createdAt)
+        );
+        dispatch({ type: 'LOAD_RECORDS', payload: merged });
+      } catch {
+        dispatch({ type: 'LOAD_RECORDS', payload: localRecords });
+      }
     }
+    loadRecords();
   }, []);
 
   useEffect(() => {
@@ -58,10 +83,12 @@ export function RecordsProvider({ children }: { children: React.ReactNode }) {
 
   const addRecord = useCallback((record: EmotionRecord) => {
     dispatch({ type: 'ADD_RECORD', payload: record });
+    syncRecordToRemote(record);
   }, []);
 
   const deleteRecord = useCallback((id: string) => {
     dispatch({ type: 'DELETE_RECORD', payload: id });
+    deleteRecordFromRemote(id);
   }, []);
 
   const getTodayRecords = useCallback(() => {

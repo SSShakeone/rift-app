@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Direction } from '@/types';
 import { useRecords } from '@/hooks/useRecords';
-import { generateMockRecords } from '@/lib/mock-data';
 import { generateId } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import DirectionSlider from '@/components/record/DirectionSlider';
@@ -31,14 +30,6 @@ export default function HomePage() {
     desiredTreatment?: string;
   }>({});
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    if (state.isLoading) return;
-    if (state.records.length === 0) {
-      const mock = generateMockRecords(30);
-      mock.forEach(r => addRecord(r));
-    }
-  }, [state.isLoading]);
 
   const todayRecords = getTodayRecords();
 
@@ -113,7 +104,7 @@ export default function HomePage() {
           <DeepQuestions values={deepAnswers} onChange={setDeepAnswers} />
 
           <motion.button
-            whileTap={{ scale: 0.97 }}
+            whileTap={canSave ? { scale: 0.97 } : {}}
             onClick={handleSave}
             disabled={!canSave}
             className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm transition-all duration-300 ${
@@ -126,6 +117,17 @@ export default function HomePage() {
             保存记录
           </motion.button>
 
+          {!canSave && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-xs text-[#F0A58E] font-medium flex items-center justify-center gap-1"
+            >
+              <span>👆</span>
+              <span>请至少选择一个触发标签才能保存</span>
+            </motion.p>
+          )}
+
           {saved && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
@@ -137,6 +139,22 @@ export default function HomePage() {
             </motion.p>
           )}
         </section>
+
+        {state.records.length === 0 && !state.isLoading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white border border-[#F0E0D0] rounded-2xl p-6 text-center shadow-sm"
+          >
+            <div className="text-4xl mb-3">🌋</div>
+            <h3 className="text-sm font-bold text-[#4A3728] mb-1">开始你的第一条记录</h3>
+            <p className="text-xs text-[#9B8E84] leading-relaxed">
+              每次情绪摩擦都是一次自我了解的机会。<br />
+              先选择情绪方向，然后挑选触发标签，写下你的感受——<br />
+              然后去「洞察」页看看你内耗的规律。
+            </p>
+          </motion.div>
+        )}
 
         <div className="border-t border-[#F0E0D0]" />
 

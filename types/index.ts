@@ -60,6 +60,32 @@ export interface CandyState {
   isOpening: boolean;
 }
 
+export interface RecordRow {
+  id: string;
+  device_id: string;
+  direction: Direction;
+  tags: string[];
+  sub_tags: string[] | null;
+  intensity: number;
+  target_person: string | null;
+  target_scene: string | null;
+  free_text: string | null;
+  sting_sentence: string | null;
+  worst_point: string | null;
+  desired_treatment: string | null;
+  created_at: string;
+}
+
+export interface CandyRow {
+  id: string;
+  device_id: string;
+  type: CandyType;
+  content: string;
+  opened_at: string;
+  is_collected: boolean;
+  related_record_ids: string[] | null;
+}
+
 export type CandyAction =
   | { type: 'SET_TODAY_CANDY'; payload: Candy }
   | { type: 'OPEN_CANDY' }
